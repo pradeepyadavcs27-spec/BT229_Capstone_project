@@ -1,0 +1,35 @@
+{
+  "ips": 10103,
+  "positive_labels": 445,
+  "random_forest": {
+    "precision": 0.9649122807017544,
+    "recall": 0.990990990990991,
+    "f1": 0.9777777777777777,
+    "confusion_matrix": [
+      [
+        2411,
+        4
+      ],
+      [
+        1,
+        110
+      ]
+    ],
+    "feature_importance": {
+      "success_ratio": 0.2691765837545844,
+      "successful_logins": 0.21180075263126164,
+      "command_events": 0.1687916432175849,
+      "suspicious_commands": 0.08838280034777922,
+      "failed_logins": 0.06875288035389344,
+      "unique_passwords": 0.06399815881192412,
+      "active_seconds": 0.04801793447863291,
+      "unique_usernames": 0.04399044117769507,
+      "n_events": 0.023160832869269246,
+      "n_sessions": 0.013927972357375045
+    }
+  },
+  "isolation_forest": {
+    "precision_vs_rule": 0.10112359550561797,
+    "recall_vs_rule": 0.24324324324324326
+  }
+}
