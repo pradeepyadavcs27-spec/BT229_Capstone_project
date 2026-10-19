@@ -1,5 +1,6 @@
 from __future__ import annotations
-
+import joblib
+import pandas as pd
 import csv
 import io
 import json
@@ -620,8 +621,54 @@ def api_db_stats():
     except sqlite3.Error:
         app.logger.exception("Could not query SQLite database")
         return jsonify({"error": "Could not query SQLite database."}), 500
+@app.get("/api/ml-status")
+def api_ml_status():
+    model_path = BASE_DIR / "honeypot_model.joblib"
 
+    if not model_path.exists():
+        return jsonify({"available": False, "error": "Model file not found"}), 404
 
+    try:
+        bundle = joblib.load(model_path)
+        return jsonify({
+            "available": True,
+            "model": "Random Forest",
+            "features": bundle["features"],
+            "training_data": "ml_training_data.csv",
+            "label_note": "Predictions reflect heuristic training labels, not verified attacks."
+        })
+    except Exception:
+        app.logger.exception("Could not load ML model")
+        return jsonify({"available": False, "error": "Could not load model"}), 500
+@app.post("/api/ml-predict")
+def api_ml_predict():
+    from flask import request
+
+    model_path = BASE_DIR / "honeypot_model.joblib"
+
+    try:
+        bundle = joblib.load(model_path)
+        features = bundle["features"]
+        data = request.get_json(silent=True) or {}
+
+        values = {}
+        for feature in features:
+            value = data.get(feature, 0)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+                return jsonify({"error": f"Invalid value for {feature}"}), 400
+            values[feature] = value
+
+        sample = pd.DataFrame([values], columns=features)
+        prediction = int(bundle["model"].predict(sample)[0])
+
+        return jsonify({
+            "prediction": prediction,
+            "classification": "Suspicious (heuristic-based)" if prediction == 1 else "Lower suspicion (heuristic-based)",
+            "note": "Prototype prediction; not proof of malicious activity."
+        })
+    except Exception:
+        app.logger.exception("ML prediction failed")
+        return jsonify({"error": "Prediction failed"}), 500
 
 if __name__ == "__main__":
     # Keep this bound to loopback for a local lab dashboard.
