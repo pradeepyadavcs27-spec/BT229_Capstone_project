@@ -1,6 +1,9 @@
 cowrie-env/
 venv/
 .venv/
+
+
+
 __pycache__/
 *.py[cod]
 .env
@@ -11,3 +14,6 @@ var/run/
 # Local Cowrie configuration and generated reports
 etc/
 security_report.json
+
+datasets/
+backups/

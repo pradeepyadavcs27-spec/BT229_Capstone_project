@@ -8,6 +8,7 @@ import re
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
+import sqlite3
 from typing import Any
 
 from flask import Flask, Response, jsonify, render_template, request
@@ -22,6 +23,43 @@ LOG_PATH = Path(
 
 # This dashboard intentionally stays on localhost. Do not change host to 0.0.0.0.
 app = Flask(__name__, template_folder="templates")
+
+
+@app.get("/api/http-events")
+def api_http_events():
+    db_path = BASE_DIR / "data" / "honeypot.db"
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute("""
+                SELECT timestamp, source_ip, device_id,
+                       event_type, details
+                FROM events
+                WHERE source = 'http_decoy'
+                ORDER BY timestamp DESC
+                LIMIT 100
+            """).fetchall()
+
+        return jsonify({
+            "total": len(rows),
+            "events": [
+                {
+                    "timestamp": row["timestamp"],
+                    "source_ip": row["source_ip"],
+                    "device_id": row["device_id"],
+                    "event_type": row["event_type"],
+                    "details": json.loads(row["details"])
+                    if row["details"] else {},
+                }
+                for row in rows
+            ],
+        })
+
+    except (sqlite3.Error, json.JSONDecodeError):
+        app.logger.exception("Could not retrieve HTTP decoy events")
+        return jsonify({"error": "Could not retrieve HTTP decoy events."}), 500
+
 
 # These are heuristic indicators, not proof of malicious activity.
 # Keep account-management commands separate from references to /etc/passwd.
@@ -531,6 +569,58 @@ def api_export_csv():
             "Content-Disposition": 'attachment; filename="iot-honeypot-events.csv"'
         },
     )
+@app.get("/api/brute-force")
+def api_brute_force():
+    report_path = BASE_DIR / "brute_force_report.json"
+
+    if not report_path.exists():
+        return jsonify({
+            "error": "Brute-force report not found. Run brute_force_detector.py first."
+        }), 404
+
+    try:
+        with report_path.open("r", encoding="utf-8") as handle:
+            report = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        app.logger.exception("Could not read brute-force report")
+        return jsonify({"error": "Could not read brute-force report."}), 500
+
+    return jsonify(report)
+
+
+@app.get("/api/db-stats")
+def api_db_stats():
+    db_path = BASE_DIR / "data" / "honeypot.db"
+
+    if not db_path.exists():
+        return jsonify({"error": "SQLite database not found."}), 404
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            total = conn.execute(
+                "SELECT COUNT(*) FROM events"
+            ).fetchone()[0]
+
+            rows = conn.execute("""
+                SELECT source, COUNT(*)
+                FROM events
+                GROUP BY source
+                ORDER BY source
+            """).fetchall()
+
+        return jsonify({
+            "database": str(db_path),
+            "total_events": total,
+            "events_by_source": [
+                {"source": source, "count": count}
+                for source, count in rows
+            ],
+        })
+
+    except sqlite3.Error:
+        app.logger.exception("Could not query SQLite database")
+        return jsonify({"error": "Could not query SQLite database."}), 500
+
 
 
 if __name__ == "__main__":

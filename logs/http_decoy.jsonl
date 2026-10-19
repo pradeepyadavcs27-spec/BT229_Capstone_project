@@ -1,0 +1,5 @@
+{"timestamp": "2026-10-19T09:08:50.071290+00:00", "device_id": "IOT-CAM-001", "source_ip": "127.0.0.1", "method": "GET", "path": "/", "user_agent": "curl/8.18.0"}
+{"timestamp": "2026-10-19T09:09:36.073321+00:00", "device_id": "IOT-CAM-001", "source_ip": "127.0.0.1", "method": "GET", "path": "/", "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36"}
+{"timestamp": "2026-10-19T09:09:36.132263+00:00", "device_id": "IOT-CAM-001", "source_ip": "127.0.0.1", "method": "GET", "path": "/favicon.ico", "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36"}
+{"timestamp": "2026-10-19T09:10:08.417666+00:00", "device_id": "IOT-CAM-001", "source_ip": "127.0.0.1", "method": "GET", "path": "/", "user_agent": "curl/8.18.0"}
+{"timestamp": "2026-10-19T09:10:34.567063+00:00", "device_id": "IOT-CAM-001", "source_ip": "127.0.0.1", "method": "GET", "path": "/admin", "user_agent": "curl/8.18.0"}
